@@ -36,3 +36,14 @@ SKIP
     )
 
     return response.text
+
+news = fetch_news()
+
+first_news = news[0]
+
+print(
+    summarize_news(
+        first_news["title"],
+        first_news["summary"]
+    )
+)
