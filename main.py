@@ -1,23 +1,16 @@
-import os
-import requests
+from news.fetcher import fetch_news
+from news.deduplicate import remove_duplicates
 
-response = requests.post(
-    "https://openrouter.ai/api/v1/chat/completions",
-    headers={
-        "Authorization": f"Bearer {os.getenv('OPENROUTER_API_KEY')}",
-        "Content-Type": "application/json"
-    },
-    json={
-        "model": "openrouter/auto",
-        "max_tokens": 150,
-        "messages": [
-            {
-                "role": "user",
-                "content": "در یک جمله کوتاه به فارسی بگو سلام"
-            }
-        ]
-    }
-)
+news = fetch_news()
 
-print(response.status_code)
-print(response.text)
+print(f"Fetched: {len(news)}")
+
+news = remove_duplicates(news)
+
+print(f"Unique: {len(news)}")
+
+for item in news[:10]:
+
+    print("=" * 50)
+    print(item["title"])
+    print(item["source"])
