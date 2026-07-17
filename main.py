@@ -9,10 +9,11 @@ response = requests.post(
     },
     json={
         "model": "openrouter/auto",
+        "max_tokens": 150,
         "messages": [
             {
                 "role": "user",
-                "content": "سلام"
+                "content": "در یک جمله کوتاه به فارسی بگو سلام"
             }
         ]
     }
