@@ -1,16 +1,19 @@
 from news.fetcher import fetch_news
 from news.deduplicate import remove_duplicates
 
-news = fetch_news()
+from ai.gemini import summarize_news
 
-print(f"Fetched: {len(news)}")
+news = fetch_news()
 
 news = remove_duplicates(news)
 
-print(f"Unique: {len(news)}")
+print(f"Total News: {len(news)}")
 
-for item in news[:10]:
+first_news = news[0]
 
-    print("=" * 50)
-    print(item["title"])
-    print(item["source"])
+result = summarize_news(
+    first_news["title"],
+    first_news["summary"]
+)
+
+print(result)
