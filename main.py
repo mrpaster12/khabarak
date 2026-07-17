@@ -1,17 +1,22 @@
 import os
 import requests
 
-TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+def ask_ai(text):
+    response = requests.post(
+        "https://openrouter.ai/api/v1/chat/completions",
+        headers={
+            "Authorization": f"Bearer {os.getenv('OPENROUTER_API_KEY')}",
+            "Content-Type": "application/json"
+        },
+        json={
+            "model": "deepseek/deepseek-chat-v3.1:free",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": text
+                }
+            ]
+        }
+    )
 
-message = "🚀 ربات خبری با موفقیت اجرا شد."
-
-url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
-
-requests.post(
-    url,
-    json={
-        "chat_id": CHAT_ID,
-        "text": message
-    }
-)
+    return response.json()["choices"][0]["message"]["content"]
