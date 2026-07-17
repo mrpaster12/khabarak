@@ -20,3 +20,8 @@ def ask_ai(text):
     )
 
     return response.json()["choices"][0]["message"]["content"]
+summary = ask_ai(
+    "در یک جمله کوتاه به فارسی بگو سلام از OpenRouter"
+)
+
+message = summary
