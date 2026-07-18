@@ -1,19 +1,19 @@
 import os
 import requests
 
-TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
+def send_message(text):
 
-def send_message(message):
+    token = os.getenv("TELEGRAM_BOT_TOKEN")
+    chat_id = os.getenv("TELEGRAM_CHAT_ID")
 
-    url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
+    url = f"https://api.telegram.org/bot{token}/sendMessage"
 
     requests.post(
         url,
         json={
-            "chat_id": CHAT_ID,
-            "text": message
+            "chat_id": chat_id,
+            "text": text
         },
         timeout=30
     )
