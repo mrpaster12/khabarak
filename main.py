@@ -1,15 +1,19 @@
 from news.fetcher import fetch_news
 from news.deduplicate import remove_duplicates
+from news.cluster import cluster_news
+from news.merge import merge_cluster
+
 from news.history import already_sent
 from news.history import mark_sent
-
-from news.summarize import summarize_news
-from news.summarize import parse_ai_result
 
 from publishers.telegram import send_message
 
 
 def build_message(data):
+
+    sources = " | ".join(
+        data.get("sources", [])
+    )
 
     return f"""
 🚨 {data['title']}
@@ -19,6 +23,9 @@ def build_message(data):
 📰 خلاصه:
 
 {data['summary']}
+
+📚 منابع:
+{sources}
 
 🏷 دسته:
 {data['category']}
@@ -31,41 +38,42 @@ def main():
 
     news = remove_duplicates(news)
 
-    print(f"News Count: {len(news)}")
+    print(f"Fetched {len(news)}")
+
+    clusters = cluster_news(news)
+
+    print(f"Clusters {len(clusters)}")
 
     candidates = []
 
-    for item in news[:30]:
+    for cluster in clusters:
 
-        if already_sent(item["title"]):
+        title = cluster[0]["title"]
+
+        if already_sent(title):
             continue
 
         try:
 
-            result = summarize_news(
-                item["title"],
-                item["summary"]
+            merged = merge_cluster(
+                cluster
             )
 
-            parsed = parse_ai_result(
-                result
-            )
-
-            if not parsed:
+            if not merged:
                 continue
 
             importance = int(
-                parsed["importance"]
+                merged["importance"]
             )
 
-            if importance < 5:
+            if importance < 6:
                 continue
 
             candidates.append(
                 (
                     importance,
-                    parsed,
-                    item["title"]
+                    merged,
+                    title
                 )
             )
 
@@ -74,29 +82,28 @@ def main():
             print(e)
 
     if not candidates:
-
-        print("No Important News")
+        print("No news")
         return
 
     candidates.sort(
-        key=lambda x: x[0],
-        reverse=True
+        reverse=True,
+        key=lambda x: x[0]
     )
 
     best = candidates[0]
 
-    message = build_message(
-        best[1]
+    send_message(
+        build_message(
+            best[1]
+        )
     )
-
-    send_message(message)
 
     mark_sent(
         best[2]
     )
 
-    print("News Sent")
-
+    print("Sent")
+    
 
 if __name__ == "__main__":
     main()
