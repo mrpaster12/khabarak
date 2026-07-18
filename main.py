@@ -1,40 +1,102 @@
 from news.fetcher import fetch_news
 from news.deduplicate import remove_duplicates
+from news.history import already_sent
+from news.history import mark_sent
+
 from news.summarize import summarize_news
+from news.summarize import parse_ai_result
 
 from publishers.telegram import send_message
 
-news = fetch_news()
 
-news = remove_duplicates(news)
+def build_message(data):
 
-print(f"Total News: {len(news)}")
+    return f"""
+🚨 {data['title']}
 
-processed = 0
+📊 اهمیت: {data['importance']}/10
 
-for item in news[:20]:
+📰 خلاصه:
 
-    try:
+{data['summary']}
 
-        result = summarize_news(
-            item["title"],
-            item["summary"]
-        )
+🏷 دسته:
+{data['category']}
+""".strip()
 
-        print(result)
 
-        if "SKIP" in result:
+def main():
+
+    news = fetch_news()
+
+    news = remove_duplicates(news)
+
+    print(f"News Count: {len(news)}")
+
+    candidates = []
+
+    for item in news[:30]:
+
+        if already_sent(item["title"]):
             continue
 
-        send_message(
-            f"📰 {result}"
-        )
+        try:
 
-        processed += 1
+            result = summarize_news(
+                item["title"],
+                item["summary"]
+            )
 
-        if processed >= 5:
-            break
+            parsed = parse_ai_result(
+                result
+            )
 
-    except Exception as e:
+            if not parsed:
+                continue
 
-        print(e)
+            importance = int(
+                parsed["importance"]
+            )
+
+            if importance < 5:
+                continue
+
+            candidates.append(
+                (
+                    importance,
+                    parsed,
+                    item["title"]
+                )
+            )
+
+        except Exception as e:
+
+            print(e)
+
+    if not candidates:
+
+        print("No Important News")
+        return
+
+    candidates.sort(
+        key=lambda x: x[0],
+        reverse=True
+    )
+
+    best = candidates[0]
+
+    message = build_message(
+        best[1]
+    )
+
+    send_message(message)
+
+    mark_sent(
+        best[2]
+    )
+
+    print("News Sent")
+
+
+if __name__ == "__main__":
+    main()
