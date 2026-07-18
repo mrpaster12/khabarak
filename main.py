@@ -1,7 +1,8 @@
 from news.fetcher import fetch_news
 from news.deduplicate import remove_duplicates
+from news.summarize import summarize_news
 
-from ai.gemini import summarize_news
+from publishers.telegram import send_message
 
 news = fetch_news()
 
@@ -9,11 +10,31 @@ news = remove_duplicates(news)
 
 print(f"Total News: {len(news)}")
 
-first_news = news[0]
+processed = 0
 
-result = summarize_news(
-    first_news["title"],
-    first_news["summary"]
-)
+for item in news[:20]:
 
-print(result)
+    try:
+
+        result = summarize_news(
+            item["title"],
+            item["summary"]
+        )
+
+        print(result)
+
+        if "SKIP" in result:
+            continue
+
+        send_message(
+            f"📰 {result}"
+        )
+
+        processed += 1
+
+        if processed >= 5:
+            break
+
+    except Exception as e:
+
+        print(e)
