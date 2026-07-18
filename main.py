@@ -46,8 +46,7 @@ def main():
 
     candidates = []
 
-    for cluster in clusters:
-
+    for cluster in clusters[:5]:
         title = cluster[0]["title"]
 
         if already_sent(title):
