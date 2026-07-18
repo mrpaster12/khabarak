@@ -1,45 +1,67 @@
-from router import ask_ai
+import json
+import re
+
+from ai.router import ask_ai
 
 
 PROMPT = """
 تو یک سردبیر حرفه‌ای خبر هستی.
 
-وظایف:
+خبر را بررسی کن.
 
-1- خبر را بررسی کن.
-
-2- اگر مهم نیست فقط بنویس:
+اگر خبر بی اهمیت است فقط بنویس:
 
 SKIP
 
-3- اگر مهم است خروجی دقیقا به این شکل باشد:
+اگر خبر مهم است فقط JSON برگردان.
 
-IMPORTANCE: عدد بین 1 تا 10
+فرمت:
 
-TITLE:
-تیتر کوتاه فارسی
+{
+  "importance": 8,
+  "title": "عنوان کوتاه فارسی",
+  "summary": "حداکثر 3 جمله",
+  "category": "POLITICS"
+}
 
-SUMMARY:
-حداکثر 3 جمله فارسی
-
-CATEGORY:
-POLITICS
-ECONOMY
-WAR
-TECH
-WORLD
+فقط JSON برگردان.
 """
+
 
 def summarize_news(title, summary):
 
     prompt = f"""
 {PROMPT}
 
-TITLE:
+عنوان:
 {title}
 
-TEXT:
+متن:
 {summary}
 """
 
     return ask_ai(prompt)
+
+
+def parse_ai_result(text):
+
+    if "SKIP" in text.upper():
+        return None
+
+    try:
+
+        match = re.search(
+            r"\{.*\}",
+            text,
+            re.DOTALL
+        )
+
+        if not match:
+            return None
+
+        return json.loads(
+            match.group()
+        )
+
+    except Exception:
+        return None
