@@ -1,6 +1,7 @@
 import os
 import requests
 
+
 def ask_groq(prompt):
 
     response = requests.post(
@@ -17,8 +18,9 @@ def ask_groq(prompt):
                     "content": prompt
                 }
             ],
-            "max_tokens": 300
-        }
+            "max_tokens": 500
+        },
+        timeout=60
     )
 
     response.raise_for_status()
